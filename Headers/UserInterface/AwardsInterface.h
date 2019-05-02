@@ -1,13 +1,13 @@
 #pragma once
-#include "UserInterface/MenuInterface.h"
+#include "UserInterface/PromptInterface.h"
 
 #define INSERT_COIN_OPTION "Insert Coin"
 
-class AwardsInterface final : public MenuInterface
+class AwardsInterface final : public PromptInterface
 {
 public:
 
-    static AwardsInterface* getInstance(int iWidth, int iHeight);
+    static AwardsInterface* getInstance();
 
     // Default Constructor
     AwardsInterface();
@@ -23,9 +23,7 @@ public:
 private:
     enum eUIComponent
     {
-        BACKGROUND = 0,
         TITLE,
-        INSERT_COIN
     };
 
     static AwardsInterface* m_pInstance;

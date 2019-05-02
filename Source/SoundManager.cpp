@@ -42,6 +42,8 @@ SoundManager::SoundManager() {
                                            FMOD_INIT_NORMAL,
                                            NO_EXTRA_DRIVER_DATA));
 
+    m_bMusicEnabled = true;
+
 }
 
 /*************************************************************************\
@@ -170,16 +172,9 @@ void SoundManager::handleCollisionSound(Entity * collider, Entity * collided)
     // can be annoying if they get stuck on a wall
     bool colliderIsBot = GAME_STATS->isBot(colliderHovercraft);
     bool collidedIsBot = GAME_STATS->isBot(collidedHovercraft);
-    if (handleBaseCollisionSound(colliderType, collidedType,
-                                 colliderIsBot, collidedIsBot))
-    {
-        // For some reason this check is not enough?
-        if (((colliderType == eEntityType::ENTITY_HOVERCRAFT))
-            && (collidedType == eEntityType::ENTITY_HOVERCRAFT))
-        {
-            handleContextCollisionSound(colliderHovercraft, collidedHovercraft);
-        }
-    }
+    handleBaseCollisionSound(
+        colliderType, collidedType,
+        colliderIsBot, collidedIsBot);
 }
 
 /*
@@ -189,14 +184,21 @@ void SoundManager::handleCollisionSound(Entity * collider, Entity * collided)
     @NOTE: This will be unneeded when interactable entities become further
            developed. As all abilities will be interactable entitise, context
            collisions will be determined in handleBaseCollisionSound.
+
+    @Deprecated
 */
 void SoundManager::handleContextCollisionSound(HovercraftEntity* collider,
                                                HovercraftEntity* collided)
 {
+    if (collider->isBot() && collided->isBot())
+    {
+        // We don't care about 2 bots colliding. Too much noise pollution.
+        return;
+    }
     if (collider->hasSpikesActivated()
         || collided->hasSpikesActivated())
     {
-        play(eSoundEvent::SOUND_SPIKES_IMPACT, !(collider->isBot() && collided->isBot()));
+        play(eSoundEvent::SOUND_SPIKES_IMPACT);
     }
 
 }
@@ -219,32 +221,32 @@ void SoundManager::play(eSoundEvent sound, vec3 location)
     @param entityID that the sound belongs to
     @param loopID   to start looping
 */
-void SoundManager::startLoop(eSoundEvent sound, int entityID, int loopID)
+void SoundManager::startLoop(eSoundEvent sound, eHovercraft hovercraft)
 {
     auto eventInstance = mEvents[getPath(sound)];
-    switch (entityID) {
-    case 37:
+    switch (hovercraft) {
+    case HOVERCRAFT_PLAYER_1:
         eventInstance = mEvents[getPath(SOUND_TRAIL_1)];
         break;
-    case 40:
+    case HOVERCRAFT_PLAYER_2:
         eventInstance = mEvents[getPath(SOUND_TRAIL_2)];
         break;
-    case 43:
+    case HOVERCRAFT_PLAYER_3:
         eventInstance = mEvents[getPath(SOUND_TRAIL_3)];
         break;
-    case 46:
+    case HOVERCRAFT_PLAYER_4:
         eventInstance = mEvents[getPath(SOUND_TRAIL_4)];
         break;
-    case 49:
+    case HOVERCRAFT_BOT_1:
         eventInstance = mEvents[getPath(SOUND_TRAIL_5)];
         break;
-    case 52:
+    case HOVERCRAFT_BOT_2:
         eventInstance = mEvents[getPath(SOUND_TRAIL_6)];
         break;
-    case 55:
+    case HOVERCRAFT_BOT_3:
         eventInstance = mEvents[getPath(SOUND_TRAIL_7)];
         break;
-    case 58:
+    case HOVERCRAFT_BOT_4:
         eventInstance = mEvents[getPath(SOUND_TRAIL_8)];
         break;
     }
@@ -262,32 +264,32 @@ void SoundManager::startLoop(eSoundEvent sound, int entityID, int loopID)
     @param entityID that the sound belongs to
     @param loopID   to stop looping
 */
-void SoundManager::endLoop(eSoundEvent sound, int entityID, int loopID)
+void SoundManager::endLoop(eSoundEvent sound, eHovercraft hovercraft)
 {
     auto eventInstance = mEvents[getPath(sound)];
-    switch (entityID) {
-    case 37:
+    switch (hovercraft) {
+    case HOVERCRAFT_PLAYER_1:
         eventInstance = mEvents[getPath(SOUND_TRAIL_1)];
         break;
-    case 40:
+    case HOVERCRAFT_PLAYER_2:
         eventInstance = mEvents[getPath(SOUND_TRAIL_2)];
         break;
-    case 43:
+    case HOVERCRAFT_PLAYER_3:
         eventInstance = mEvents[getPath(SOUND_TRAIL_3)];
         break;
-    case 46:
+    case HOVERCRAFT_PLAYER_4:
         eventInstance = mEvents[getPath(SOUND_TRAIL_4)];
         break;
-    case 49:
+    case HOVERCRAFT_BOT_1:
         eventInstance = mEvents[getPath(SOUND_TRAIL_5)];
         break;
-    case 52:
+    case HOVERCRAFT_BOT_2:
         eventInstance = mEvents[getPath(SOUND_TRAIL_6)];
         break;
-    case 55:
+    case HOVERCRAFT_BOT_3:
         eventInstance = mEvents[getPath(SOUND_TRAIL_7)];
         break;
-    case 58:
+    case HOVERCRAFT_BOT_4:
         eventInstance = mEvents[getPath(SOUND_TRAIL_8)];
         break;
     }
@@ -687,9 +689,9 @@ void SoundManager::setPauseMenu() {
         it.second->setPaused(true);
     }
     // play pause music
-    auto tFoundIt = mEvents.find(getPath(SOUND_MUSIC_PAUSE));
-    tFoundIt->second->setPaused(false);
-    play(SOUND_MUSIC_PAUSE);
+    // auto tFoundIt = mEvents.find(getPath(SOUND_MUSIC_PAUSE));
+    // tFoundIt->second->setPaused(false);
+    play(SOUND_MUSIC_PAUSE, m_bMusicEnabled);
     updateChannels();
 }
 
@@ -714,7 +716,7 @@ void SoundManager::setEndGame()
 {
     stopAllEvents();
     play(SoundManager::eSoundEvent::SOUND_UI_END_GAME_CHEER);
-    play(SOUND_MUSIC_INGAME);
+    play(SOUND_MUSIC_OUTRUN, m_bMusicEnabled);
 }
 
 // @Deprecated
@@ -738,7 +740,7 @@ void SoundManager::downPosition() {
 }
 
 void SoundManager::start() {
-    play(SOUND_MUSIC_INGAME);
+    play(SOUND_MUSIC_OUTRUN, m_bMusicEnabled);
 }
 
 // Call every frame (or more often)

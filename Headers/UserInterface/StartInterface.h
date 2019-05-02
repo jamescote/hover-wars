@@ -1,34 +1,38 @@
 #pragma once
-#include "UserInterface/MenuInterface.h"
+#include "UserInterface/PromptInterface.h"
 
 #define INSERT_COIN_OPTION "Insert Coin"
 
-class StartInterface final : public MenuInterface
+class StartInterface final : public PromptInterface
 {
 public:
 
-    static StartInterface* getInstance(int iWidth, int iHeight);
+    static StartInterface* getInstance();
 
     // Default Constructor
     StartInterface();
     StartInterface(const StartInterface* pCopy);                              // Default Copy Constructor
     StartInterface& operator=(const StartInterface* pCopy);                   // Assignment Operator.
 
-    void updateOverride(float fSecondsSinceLastUpdate);
-
     void reinitialize(float gameTime);
 
-    void renderOverride();
 
 private:
     enum eUIComponent
     {
         BACKGROUND = 0,
         TITLE,
-        INSERT_COIN
+        INSERT_COIN,
     };
 
     static StartInterface* m_pInstance;
 
+    void updateOverride(float fTimeInSeconds);
+
+    void renderOverride();
+
     void renderOption();
+
+    float m_fBlinkTime;
+    bool m_bPromptVisible;
 };

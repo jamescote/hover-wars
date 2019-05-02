@@ -1,6 +1,7 @@
 #include "UserInterface/UserInterface.h"
 #include "ShaderManager.h"
 #include "TextureManager.h"
+#include "UserInterface/UserInterfaceManager.h"
 
 /***********\
  * Defines *
@@ -33,8 +34,10 @@ Coordinate system:
 
 // Unit: seconds
 #define GLOBAL_MESSAGE_TIME 3.0f
-#define GLOBAL_MESSAGE_X 0.5f
-#define GLOBAL_MESSAGE_Y 0.5f
+// Translating offset to be as close to the bottom left corner as possible
+// for large displays
+#define GLOBAL_MESSAGE_X 5.0f
+#define GLOBAL_MESSAGE_Y 10.0f
 
 
 /*************\
@@ -59,6 +62,7 @@ UserInterface::UserInterface(vector<pair<float, float>> componentScaling,
 {
     // Get Singleton Handles
     m_pShdrMngr = SHADER_MANAGER;
+    m_pUserInterfaceManager = UserInterfaceManager::getInstance();
 
     m_vComponentScaling = componentScaling;
     m_vComponentTranslating = componentTranslating;
@@ -69,110 +73,17 @@ UserInterface::UserInterface(vector<pair<float, float>> componentScaling,
     initFreeType();
     initializeVBOs();
 
-    m_Textures[IMAGE_MENU_0] = TEXTURE_MANAGER->loadTexture(IMAGE_MENU_0);
-    m_Textures[IMAGE_MENU_1] = TEXTURE_MANAGER->loadTexture(IMAGE_MENU_1);
-    m_Textures[IMAGE_MENU_2] = TEXTURE_MANAGER->loadTexture(IMAGE_MENU_2);
-    m_Textures[IMAGE_MENU_3] = TEXTURE_MANAGER->loadTexture(IMAGE_MENU_3);
-    m_Textures[IMAGE_MENU_4] = TEXTURE_MANAGER->loadTexture(IMAGE_MENU_4);
-
-    m_Textures[IMAGE_0] = TEXTURE_MANAGER->loadTexture(IMAGE_0);
-    m_Textures[IMAGE_1] = TEXTURE_MANAGER->loadTexture(IMAGE_1);
-    m_Textures[IMAGE_2] = TEXTURE_MANAGER->loadTexture(IMAGE_2);
-    m_Textures[IMAGE_3] = TEXTURE_MANAGER->loadTexture(IMAGE_3);
-    m_Textures[IMAGE_4] = TEXTURE_MANAGER->loadTexture(IMAGE_4);
-    m_Textures[IMAGE_5] = TEXTURE_MANAGER->loadTexture(IMAGE_5);
-    m_Textures[IMAGE_6] = TEXTURE_MANAGER->loadTexture(IMAGE_6);
-    m_Textures[IMAGE_7] = TEXTURE_MANAGER->loadTexture(IMAGE_7);
-    m_Textures[IMAGE_8] = TEXTURE_MANAGER->loadTexture(IMAGE_8);
-    m_Textures[IMAGE_9] = TEXTURE_MANAGER->loadTexture(IMAGE_9);
-    m_Textures[IMAGE_EXIT_1] = TEXTURE_MANAGER->loadTexture(IMAGE_EXIT_1);
-    m_Textures[IMAGE_EXIT_2] = TEXTURE_MANAGER->loadTexture(IMAGE_EXIT_2);
-    m_Textures[IMAGE_BACKGROUND_START_MENU] = TEXTURE_MANAGER->loadTexture(IMAGE_BACKGROUND_START_MENU);
-    m_Textures[IMAGE_BACKGROUND_MAIN_MENU] = TEXTURE_MANAGER->loadTexture(IMAGE_BACKGROUND_MAIN_MENU);
-    m_Textures[IMAGE_MAIN_MENU_BUTTON_1] = TEXTURE_MANAGER->loadTexture(IMAGE_MAIN_MENU_BUTTON_1);
-    m_Textures[IMAGE_MAIN_MENU_BUTTON_2] = TEXTURE_MANAGER->loadTexture(IMAGE_MAIN_MENU_BUTTON_2);
-    m_Textures[IMAGE_NEW_GAME_1] = TEXTURE_MANAGER->loadTexture(IMAGE_NEW_GAME_1);
-    m_Textures[IMAGE_NEW_GAME_2] = TEXTURE_MANAGER->loadTexture(IMAGE_NEW_GAME_2);
-    m_Textures[IMAGE_BACKGROUND_PAUSE_MENU] = TEXTURE_MANAGER->loadTexture(IMAGE_BACKGROUND_PAUSE_MENU);
-    m_Textures[IMAGE_BACKGROUND_POST_MENU] = TEXTURE_MANAGER->loadTexture(IMAGE_BACKGROUND_POST_MENU);
-    m_Textures[IMAGE_BACKGROUND_PRE_MENU] = TEXTURE_MANAGER->loadTexture(IMAGE_BACKGROUND_PRE_MENU);
-    m_Textures[IMAGE_RESUME_1] = TEXTURE_MANAGER->loadTexture(IMAGE_RESUME_1);
-    m_Textures[IMAGE_RESUME_2] = TEXTURE_MANAGER->loadTexture(IMAGE_RESUME_2);
-    m_Textures[IMAGE_START_1] = TEXTURE_MANAGER->loadTexture(IMAGE_START_1);
-    m_Textures[IMAGE_START_2] = TEXTURE_MANAGER->loadTexture(IMAGE_START_2);
-    m_Textures[IMAGE_TITLE] = TEXTURE_MANAGER->loadTexture(IMAGE_TITLE);
-    m_Textures[IMAGE_INSERT_COIN_1] = TEXTURE_MANAGER->loadTexture(IMAGE_INSERT_COIN_1);
-    m_Textures[IMAGE_INSERT_COIN_2] = TEXTURE_MANAGER->loadTexture(IMAGE_INSERT_COIN_2);
-    m_Textures[IMAGE_NUMBER_OF_PLAYER_1] = TEXTURE_MANAGER->loadTexture(IMAGE_NUMBER_OF_PLAYER_1);
-    m_Textures[IMAGE_NUMBER_OF_PLAYER_2] = TEXTURE_MANAGER->loadTexture(IMAGE_NUMBER_OF_PLAYER_2);
-    m_Textures[IMAGE_NUMBER_OF_BOT_1] = TEXTURE_MANAGER->loadTexture(IMAGE_NUMBER_OF_BOT_1);
-    m_Textures[IMAGE_NUMBER_OF_BOT_2] = TEXTURE_MANAGER->loadTexture(IMAGE_NUMBER_OF_BOT_2);
-    m_Textures[IMAGE_END_GAME_1] = TEXTURE_MANAGER->loadTexture(IMAGE_END_GAME_1);
-    m_Textures[IMAGE_END_GAME_2] = TEXTURE_MANAGER->loadTexture(IMAGE_END_GAME_2);
-    m_Textures[IMAGE_GAME_TIME_1] = TEXTURE_MANAGER->loadTexture(IMAGE_GAME_TIME_1);
-    m_Textures[IMAGE_GAME_TIME_2] = TEXTURE_MANAGER->loadTexture(IMAGE_GAME_TIME_2);
-    m_Textures[IMAGE_1_MIN] = TEXTURE_MANAGER->loadTexture(IMAGE_1_MIN);
-    m_Textures[IMAGE_2_MIN] = TEXTURE_MANAGER->loadTexture(IMAGE_2_MIN);
-    m_Textures[IMAGE_3_MIN] = TEXTURE_MANAGER->loadTexture(IMAGE_3_MIN);
-    m_Textures[IMAGE_4_MIN] = TEXTURE_MANAGER->loadTexture(IMAGE_4_MIN);
-    m_Textures[IMAGE_5_MIN] = TEXTURE_MANAGER->loadTexture(IMAGE_5_MIN);
-    m_Textures[IMAGE_6_MIN] = TEXTURE_MANAGER->loadTexture(IMAGE_6_MIN);
-    m_Textures[IMAGE_7_MIN] = TEXTURE_MANAGER->loadTexture(IMAGE_7_MIN);
-    m_Textures[IMAGE_8_MIN] = TEXTURE_MANAGER->loadTexture(IMAGE_8_MIN);
-    m_Textures[IMAGE_9_MIN] = TEXTURE_MANAGER->loadTexture(IMAGE_9_MIN);
-    m_Textures[IMAGE_10_MIN] = TEXTURE_MANAGER->loadTexture(IMAGE_10_MIN);
-    m_Textures[IMAGE_CONTROLLER_1] = TEXTURE_MANAGER->loadTexture(IMAGE_CONTROLLER_1);
-    m_Textures[IMAGE_CONTROLLER_2] = TEXTURE_MANAGER->loadTexture(IMAGE_CONTROLLER_2);
-    m_Textures[IMAGE_GAME_RULE_1] = TEXTURE_MANAGER->loadTexture(IMAGE_GAME_RULE_1);
-    m_Textures[IMAGE_GAME_RULE_2] = TEXTURE_MANAGER->loadTexture(IMAGE_GAME_RULE_2);
-    m_Textures[IMAGE_CONTROLLER_MENU] = TEXTURE_MANAGER->loadTexture(IMAGE_CONTROLLER_MENU);
-    m_Textures[IMAGE_RULE_MENU] = TEXTURE_MANAGER->loadTexture(IMAGE_RULE_MENU);
-    m_Textures[IMAGE_AI_1] = TEXTURE_MANAGER->loadTexture(IMAGE_AI_1);
-    m_Textures[IMAGE_AI_2] = TEXTURE_MANAGER->loadTexture(IMAGE_AI_2);
-    m_Textures[IMAGE_CONFIG_1] = TEXTURE_MANAGER->loadTexture(IMAGE_CONFIG_1);
-    m_Textures[IMAGE_CONFIG_2] = TEXTURE_MANAGER->loadTexture(IMAGE_CONFIG_2);
-    m_Textures[IMAGE_PLACEMENT] = TEXTURE_MANAGER->loadTexture(IMAGE_PLACEMENT);
-    m_Textures[IMAGE_AWARDS_1] = TEXTURE_MANAGER->loadTexture(IMAGE_AWARDS_1);
-    m_Textures[IMAGE_AWARDS_2] = TEXTURE_MANAGER->loadTexture(IMAGE_AWARDS_2);
-    m_Textures[IMAGE_PLAYER_1] = TEXTURE_MANAGER->loadTexture(IMAGE_PLAYER_1);
-    m_Textures[IMAGE_PLAYER_2] = TEXTURE_MANAGER->loadTexture(IMAGE_PLAYER_2);
-    m_Textures[IMAGE_PLAYER_3] = TEXTURE_MANAGER->loadTexture(IMAGE_PLAYER_3);
-    m_Textures[IMAGE_PLAYER_4] = TEXTURE_MANAGER->loadTexture(IMAGE_PLAYER_4);
-    m_Textures[IMAGE_BOT_1] = TEXTURE_MANAGER->loadTexture(IMAGE_BOT_1);
-    m_Textures[IMAGE_BOT_2] = TEXTURE_MANAGER->loadTexture(IMAGE_BOT_2);
-    m_Textures[IMAGE_BOT_3] = TEXTURE_MANAGER->loadTexture(IMAGE_BOT_3);
-    m_Textures[IMAGE_BOT_4] = TEXTURE_MANAGER->loadTexture(IMAGE_BOT_4);
-    m_Textures[IMAGE_NUMBER_1] = TEXTURE_MANAGER->loadTexture(IMAGE_NUMBER_1);
-    m_Textures[IMAGE_NUMBER_2] = TEXTURE_MANAGER->loadTexture(IMAGE_NUMBER_2);
-    m_Textures[IMAGE_NUMBER_3] = TEXTURE_MANAGER->loadTexture(IMAGE_NUMBER_3);
-    m_Textures[IMAGE_POINT] = TEXTURE_MANAGER->loadTexture(IMAGE_POINT);
-    m_Textures[IMAGE_MAP_1] = TEXTURE_MANAGER->loadTexture(IMAGE_MAP_1);
-    m_Textures[IMAGE_MAP_2] = TEXTURE_MANAGER->loadTexture(IMAGE_MAP_2);
-    m_Textures[IMAGE_GAMEMODE_1] = TEXTURE_MANAGER->loadTexture(IMAGE_GAMEMODE_1);
-    m_Textures[IMAGE_GAMEMODE_2] = TEXTURE_MANAGER->loadTexture(IMAGE_GAMEMODE_2);
-    m_Textures[IMAGE_FREE_FOR_ALL] = TEXTURE_MANAGER->loadTexture(IMAGE_FREE_FOR_ALL);
-    m_Textures[IMAGE_BOT_TEAM] = TEXTURE_MANAGER->loadTexture(IMAGE_BOT_TEAM);
-    m_Textures[IMAGE_PLAYER_TEAM] = TEXTURE_MANAGER->loadTexture(IMAGE_PLAYER_TEAM);
-    m_Textures[IMAGE_BOT_VS_PLAYERS] = TEXTURE_MANAGER->loadTexture(IMAGE_BOT_VS_PLAYERS);
-    m_Textures[IMAGE_SCORE_LOSS_1] = TEXTURE_MANAGER->loadTexture(IMAGE_SCORE_LOSS_1);
-    m_Textures[IMAGE_SCORE_LOSS_2] = TEXTURE_MANAGER->loadTexture(IMAGE_SCORE_LOSS_2);
-    m_Textures[IMAGE_ENABLED] = TEXTURE_MANAGER->loadTexture(IMAGE_ENABLED);
-    m_Textures[IMAGE_DISABLED] = TEXTURE_MANAGER->loadTexture(IMAGE_DISABLED);
-    m_Textures[IMAGE_MAP_1] = TEXTURE_MANAGER->loadTexture(IMAGE_MAP_1);
-    m_Textures[IMAGE_MAP_2] = TEXTURE_MANAGER->loadTexture(IMAGE_MAP_2);
-    m_Textures[IMAGE_PLAYER_TEAM1] = TEXTURE_MANAGER->loadTexture(IMAGE_PLAYER_TEAM1);
-    m_Textures[IMAGE_PLAYER_TEAM2] = TEXTURE_MANAGER->loadTexture(IMAGE_PLAYER_TEAM2);
-    m_Textures[IMAGE_BOT_DIFFICULTY_1] = TEXTURE_MANAGER->loadTexture(IMAGE_BOT_DIFFICULTY_1);
-    m_Textures[IMAGE_BOT_DIFFICULTY_2] = TEXTURE_MANAGER->loadTexture(IMAGE_BOT_DIFFICULTY_2);
-    m_Textures[IMAGE_HARD] = TEXTURE_MANAGER->loadTexture(IMAGE_HARD);
-    m_Textures[IMAGE_MEDIUM] = TEXTURE_MANAGER->loadTexture(IMAGE_MEDIUM);
-    m_Textures[IMAGE_EASY] = TEXTURE_MANAGER->loadTexture(IMAGE_EASY);
-    m_Textures[IMAGE_PLAYER_TEAMS] = TEXTURE_MANAGER->loadTexture(IMAGE_PLAYER_TEAMS);
+    /*
+        Whenever a UI instance is created, it is automatically stored by the UI
+        Manager for memory management.
+    */
+    m_pUserInterfaceManager->addInterface(this);
 }
 
 UserInterface::~UserInterface()
 {
     m_pShdrMngr = nullptr;
+    m_pUserInterfaceManager = nullptr;
 
     // Clean up VBO and VAO
     glDeleteBuffers(1, &m_iVertexBuffer);
@@ -210,13 +121,11 @@ void UserInterface::initFreeType()
 
     // Initialize FreeType Library and Default Font: Each function returns a non-zero integer when an error occurs.
     bLoaded = (0 == FT_Init_FreeType(&ftLibrary));
-    if (!bLoaded )
-        cout << "ERROR: Freetype: could not initialize FreeType Library for UI.\n";
+    if (!bLoaded) cout << "ERROR: Freetype: could not initialize FreeType Library for UI.\n";
 
     // Initialize Default Face
     bLoaded &= (0 == FT_New_Face(ftLibrary, DEFAULT_FONT.c_str(), 0, &ftFace));
-    if (!bLoaded )
-        cout << "ERROR: Freetype: failed to load \"" << DEFAULT_FONT << "\" for UI.\n";
+    if (!bLoaded) cout << "ERROR: Freetype: failed to load \"" << DEFAULT_FONT << "\" for UI.\n";
 
     // Successfully loaded -> Finish loading the rest of the Library.
     if (bLoaded)
@@ -248,7 +157,9 @@ void UserInterface::initFreeType()
 
                 // If it won't go out of bounds, save to buffer
                 if (cTest - cData < (BITMAP_HEIGHT * BITMAP_WIDTH))
+                {
                     addBitmapToBuffer(&ftFace->glyph->bitmap, cPtr);
+                }
                 else    // If it will go out of bounds, escape and input an error.
                 {
                     cout << "ERROR: FreeType: Could not construct proper Bitmap, Buffer went out of bounds.\n";
@@ -312,13 +223,13 @@ void UserInterface::addNewCharacter(char c, const FT_GlyphSlotRec_* pGlyph, cons
     Character cNewChar;
 
     // Set up rest of Character Structure
-    cNewChar.uvOffset = vec2(vOffsets->x / F_BITMAP_WIDTH,                                      // UV Offset for Bitmap
+    cNewChar.uvOffset = vec2(vOffsets->x / F_BITMAP_WIDTH,                               // UV Offset for Bitmap
                              vOffsets->y / F_BITMAP_HEIGHT);
     cNewChar.uvSize = vec2(static_cast<float>(pGlyph->bitmap.width) / F_BITMAP_WIDTH,    // Size of UV section
                            static_cast<float>(pGlyph->bitmap.rows) / F_BITMAP_HEIGHT);
-    cNewChar.size = ivec2(pGlyph->bitmap.width, pGlyph->bitmap.rows);     // Pixel Size
-    cNewChar.bearing = ivec2(pGlyph->bitmap_left, pGlyph->bitmap_top);    // Bearing Information
-    cNewChar.advance = pGlyph->advance.x;                                        // Glyph Advance information
+    cNewChar.size = ivec2(pGlyph->bitmap.width, pGlyph->bitmap.rows);                   // Pixel Size
+    cNewChar.bearing = ivec2(pGlyph->bitmap_left, pGlyph->bitmap_top);                  // Bearing Information
+    cNewChar.advance = pGlyph->advance.x;                                               // Glyph Advance information
 
     // Store Character for Later use.
     m_pCharacters.insert(make_pair(c, cNewChar));
@@ -362,8 +273,8 @@ void UserInterface::updateWidthAndHeight(int iWidth, int iHeight)
         m_vComponentCoordinates[component].second = (m_iHeight * m_vComponentScaling[component].second) + m_vComponentTranslating[component].second;
     }
     // Update global message coordinates
-    m_fGlobalMessageX = (m_iWidth * GLOBAL_MESSAGE_X);
-    m_fGlobalMessageY = (m_iHeight * GLOBAL_MESSAGE_Y);
+    m_fGlobalMessageX = GLOBAL_MESSAGE_X;
+    m_fGlobalMessageY = GLOBAL_MESSAGE_Y;
 
 }
 
@@ -372,19 +283,19 @@ void UserInterface::renderText(int text, GLfloat x, GLfloat y, GLfloat scale, ve
     renderText(std::to_string(text), x, y, scale, color);
 }
 /*
-Render text to the screen.
+    Render text to the screen.
 
-Window coordinates in pixels
-(0, height)     (width, height)
+    Window coordinates in pixels
+    (0, height)     (width, height)
 
 
-(0, 0)          (width, 0)
+    (0, 0)          (width, 0)
 
-@param text     to render
-@param x        x-coordinate of the bottom-left corner of text, in pixels
-@param y        y-coordinate of the bottom-left corner of text, in pixels
-@param scale    text, where 1.0 is the default size
-@param color    rgb colors of the text
+    @param text     to render
+    @param x        x-coordinate of the bottom-left corner of text, in pixels
+    @param y        y-coordinate of the bottom-left corner of text, in pixels
+    @param scale    text, where 1.0 is the default size
+    @param color    rgb colors of the text
 */
 void UserInterface::renderText(string text, GLfloat x, GLfloat y, GLfloat scale, vec3 color)
 {
@@ -429,8 +340,8 @@ void UserInterface::renderText(string text, GLfloat x, GLfloat y, GLfloat scale,
             vec4(xpos + w,  ypos + h,   ch.uvOffset.x + ch.uvSize.x,    ch.uvOffset.y)
         };
 
-        // Triangles
         /*
+           Triangles
             
             2
             |\  
@@ -442,8 +353,8 @@ void UserInterface::renderText(string text, GLfloat x, GLfloat y, GLfloat scale,
         vTextOutput.push_back(vCorners[BOTTOM_RIGHT]);
         vTextOutput.push_back(vCorners[TOP_LEFT]);
 
-        // Triangles
         /*
+            Triangles
 
             2---3
              \  |
@@ -470,6 +381,11 @@ void UserInterface::renderText(string text, GLfloat x, GLfloat y, GLfloat scale,
     // Clean up OpenGL
     glBindVertexArray(0);
     glBindTexture(GL_TEXTURE_2D, 0);
+}
+
+void UserInterface::renderText(const string text, int component, vec3 color)
+{
+    renderText(text, component, 1.0f, 1.0f, color);
 }
 
 // Shows the Sprite Map for the text map for debugging.
@@ -507,34 +423,42 @@ void UserInterface::debugFont()
     glBindTexture(GL_TEXTURE_2D, 0);
 }
 
-void UserInterface::displayGlobalMessage(string message)
+void UserInterface::displayGlobalMessage(const string message)
 {
     m_sGlobalMessage = message;
     m_fGlobalMessageTime = GLOBAL_MESSAGE_TIME;
 }
 
+void UserInterface::renderText(const string text, int component, float x, float y, vec3 color)
+{
+    renderText(text,
+        m_vComponentCoordinates[component].first + x,
+        m_vComponentCoordinates[component].second + y,
+        1.0f,
+        color);
+}
+
 /*
-TODO Use hashmap for image instead of image filepath directly
-Render image to the screen.
+    TODO Use hashmap for image instead of image filepath directly
+    Render image to the screen.
 
-Window coordinates in pixels
-(0, height)     (width, height)
+    Window coordinates in pixels
+    (0, height)     (width, height)
 
 
-(0, 0)          (width, 0)
+    (0, 0)          (width, 0)
 
-@param filepath of image
-@param x        x-coordinate of the bottom-left corner of text, in pixels
-@param y        y-coordinate of the bottom-left corner of text, in pixels
-@param scale    image, where 1.0 is the default size
+    @param filepath of image
+    @param x        x-coordinate of the bottom-left corner of text, in pixels
+    @param y        y-coordinate of the bottom-left corner of text, in pixels
+    @param scale    image, where 1.0 is the default size
 */
-void UserInterface::renderImage(string filepath, GLfloat x, GLfloat y, GLfloat scale)
+void UserInterface::renderImage(const eImage image, GLfloat x, GLfloat y, GLfloat scale)
 {
     // Get texture height and width
-    auto tFoundIt = m_Textures.find(filepath);
-    Texture* image = tFoundIt->second;
+    Texture* texture = m_pUserInterfaceManager->getTexture(image);
     int iImage_x, iImage_y;
-    image->getTextureDimensions(&iImage_y, &iImage_x);
+    texture->getTextureDimensions(&iImage_y, &iImage_x);
 
     // Set up OpenGL for Rendering
     glBindVertexArray(m_iVertexArray);
@@ -551,7 +475,7 @@ void UserInterface::renderImage(string filepath, GLfloat x, GLfloat y, GLfloat s
     vec4(x + iImage_x, y + iImage_y, 1.0f, 0.0f)
     };
 
-    image->bindTexture(ShaderManager::eShaderType::UI_SHDR, "text");
+    texture->bindTexture(ShaderManager::eShaderType::UI_SHDR, "text");
 
     // Update content of VBO memory
     glBindBuffer(GL_ARRAY_BUFFER, m_iVertexBuffer);
@@ -561,16 +485,28 @@ void UserInterface::renderImage(string filepath, GLfloat x, GLfloat y, GLfloat s
     // Render Quad
     glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
 
-    image->unbindTexture();
+    texture->unbindTexture();
 }
 
-void UserInterface::renderBackgroundImage(string filepath)
+void UserInterface::renderImage(const eImage image, int component)
+{
+    renderImage(image, component, 0, 0);
+}
+
+void UserInterface::renderImage(const eImage image, int component, float x, float y)
+{
+    renderImage(image,
+        m_vComponentCoordinates[component].first + x,
+        m_vComponentCoordinates[component].second + y,
+        1.0f);
+}
+
+void UserInterface::renderBackgroundImage(const eImage image)
 {
     // Get texture height and width
-    auto tFoundIt = m_Textures.find(filepath);
-    Texture* image = tFoundIt->second;
+    Texture* texture = m_pUserInterfaceManager->getTexture(image);
     int iImage_x, iImage_y;
-    image->getTextureDimensions(&iImage_y, &iImage_x);
+    texture->getTextureDimensions(&iImage_y, &iImage_x);
 
     // Set up OpenGL for Rendering
     glBindVertexArray(m_iVertexArray);
@@ -587,7 +523,7 @@ void UserInterface::renderBackgroundImage(string filepath)
         vec4(1.0f,  1.0f,  1.0f, 0.0f), /*Top Right*/
     };
 
-    image->bindTexture(ShaderManager::eShaderType::UI_SHDR, "text");
+    texture->bindTexture(ShaderManager::eShaderType::UI_SHDR, "text");
 
     // Update content of VBO memory
     glBindBuffer(GL_ARRAY_BUFFER, m_iVertexBuffer);
@@ -597,7 +533,48 @@ void UserInterface::renderBackgroundImage(string filepath)
     // Render Quad
     glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
 
-    image->unbindTexture();
+    texture->unbindTexture();
 }
 
+UserInterface::eImage UserInterface::digitToImage(unsigned int digit) const
+{
+    switch (digit)
+    {
+    case 0:
+        return IMAGE_0_2;
+        break;
+    case 1:
+        return IMAGE_1_2;
+        break;
+    case 2:
+        return IMAGE_2_2;
+        break;
+    case 3:
+        return IMAGE_3_2;
+        break;
+    case 4:
+        return IMAGE_4_2;
+        break;
+    case 5:
+        return IMAGE_5_2;
+        break;
+    case 6:
+        return IMAGE_6_2;
+        break;
+    case 7:
+        return IMAGE_7_2;
+        break;
+    case 8:
+        return IMAGE_8_2;
+        break;
+    case 9:
+        return IMAGE_9_2;
+        break;
+    case 10:
+        return IMAGE_10_2;
+        break;
+    default:
+        return IMAGE_0_2;
+    }
+}
 

@@ -6,14 +6,14 @@
 
     Unit : seconds
 */
-#define PROMPT_START_REPEAT_DELAY 0.75f
+#define PROMPT_START_REPEAT_DELAY 1.0f
 /*
     As the prompt repeats, there is a delay betweeen each repeat to ensure the
     cursor does not move too quickly.
 
     Unit : seconds
 */
-#define PROMPT_REPEAT_DELAY 0.25f
+#define PROMPT_REPEAT_DELAY 0.2f
 
 /*
     To prevent very slight joystick movement from registering as cursor movement,
@@ -61,28 +61,42 @@ PromptMenu::PromptMenu(vector<vector<pair<const char*, eFixedCommand>>> vPrompts
     // repeatButton
     unordered_map<int, eFixedCommand>
     {
-        {BUTTON_UP,     COMMAND_PROMPT_UP},
-        {BUTTON_LEFT,   COMMAND_PROMPT_LEFT},
-        {BUTTON_DOWN,   COMMAND_PROMPT_DOWN},
-        {BUTTON_RIGHT,  COMMAND_PROMPT_RIGHT},
+        {XBOX_BUTTON_UP,     COMMAND_PROMPT_UP},
+        {XBOX_BUTTON_LEFT,   COMMAND_PROMPT_LEFT},
+        {XBOX_BUTTON_DOWN,   COMMAND_PROMPT_DOWN},
+        {XBOX_BUTTON_RIGHT,  COMMAND_PROMPT_RIGHT},
+        { PS4_MASK | PS4_BUTTON_UP,     COMMAND_PROMPT_UP },
+        { PS4_MASK | PS4_BUTTON_LEFT,   COMMAND_PROMPT_LEFT },
+        { PS4_MASK | PS4_BUTTON_DOWN,   COMMAND_PROMPT_DOWN },
+        { PS4_MASK | PS4_BUTTON_RIGHT,  COMMAND_PROMPT_RIGHT },
     },
     // justPressedButton
     unordered_map<int, eFixedCommand>
     {
-        {BUTTON_A,      COMMAND_PROMPT_SELECT},
-        {TRIGGER_RIGHT, COMMAND_PROMPT_SELECT},
-        {BUTTON_START,  COMMAND_PROMPT_SELECT},
-        {BUTTON_B,      COMMAND_PROMPT_BACK},
-        {TRIGGER_LEFT,  COMMAND_PROMPT_BACK},
-        {BUTTON_BACK,   COMMAND_PROMPT_BACK},
+        {XBOX_BUTTON_A,      COMMAND_PROMPT_SELECT},
+        {XBOX_TRIGGER_RIGHT, COMMAND_PROMPT_SELECT},
+        {XBOX_BUTTON_START,  COMMAND_PROMPT_SELECT},
+        {XBOX_BUTTON_B,      COMMAND_PROMPT_BACK},
+        {XBOX_TRIGGER_LEFT,  COMMAND_PROMPT_BACK},
+        {XBOX_BUTTON_BACK,   COMMAND_PROMPT_BACK},
+        { PS4_MASK | PS4_BUTTON_X,          COMMAND_PROMPT_SELECT },
+        { PS4_MASK | PS4_BUTTON_R2,         COMMAND_PROMPT_SELECT },
+        { PS4_MASK | PS4_BUTTON_OPTIONS,    COMMAND_PROMPT_SELECT },
+        { PS4_MASK | PS4_BUTTON_O,          COMMAND_PROMPT_BACK },
+        { PS4_MASK | PS4_BUTTON_L2,         COMMAND_PROMPT_BACK },
+        { PS4_MASK | PS4_BUTTON_SHARE,      COMMAND_PROMPT_BACK },
     },
     // justReleasedButton
     unordered_map<int, eFixedCommand>
     {
-        {BUTTON_UP,     COMMAND_PROMPT_CURSOR_RELEASE},
-        {BUTTON_LEFT,   COMMAND_PROMPT_CURSOR_RELEASE},
-        {BUTTON_DOWN,   COMMAND_PROMPT_CURSOR_RELEASE},
-        {BUTTON_RIGHT,  COMMAND_PROMPT_CURSOR_RELEASE},
+        {XBOX_BUTTON_UP,     COMMAND_PROMPT_CURSOR_RELEASE},
+        {XBOX_BUTTON_LEFT,   COMMAND_PROMPT_CURSOR_RELEASE},
+        {XBOX_BUTTON_DOWN,   COMMAND_PROMPT_CURSOR_RELEASE},
+        {XBOX_BUTTON_RIGHT,  COMMAND_PROMPT_CURSOR_RELEASE},
+        {PS4_MASK | PS4_BUTTON_UP,     COMMAND_PROMPT_CURSOR_RELEASE },
+        {PS4_MASK | PS4_BUTTON_LEFT,   COMMAND_PROMPT_CURSOR_RELEASE },
+        {PS4_MASK | PS4_BUTTON_DOWN,   COMMAND_PROMPT_CURSOR_RELEASE },
+        {PS4_MASK | PS4_BUTTON_RIGHT,  COMMAND_PROMPT_CURSOR_RELEASE },
     }
 )
 {
@@ -325,9 +339,15 @@ void PromptMenu::moveCursor(eFixedCommand direction)
         moved = moveRightColumn();
         break;
     default:
-        return; // end early as it was not a cursor movement command
+        // end early as it was not a cursor movement command
+        return; 
     }
-    if (moved)
+    // @OTOD check logic on this
+    if (moveCursorOverride(direction))
+    {
+        SOUND_MANAGER->play(SoundManager::eSoundEvent::SOUND_UI_CURSOR_SELECT);
+    }
+    else if (moved)
     {
         // We have modulo checks to keep the cursor looping within valid options
         // However, if it loops through a dimension with only 1 option, the cursor
@@ -354,9 +374,12 @@ void PromptMenu::releaseCursor()
 
 void PromptMenu::enter()
 {
+    // Whenever we enter a menu, we reset the cursor position coordinates.
     m_iCursorRow = 0;
     m_iCursorColumn = 0;
     cout << "\n" << "Changed to " << this << " menu:" << "\n> " << getCurrentPrompt() << endl;
+
+    enterOverride();
 }
 
 
@@ -368,6 +391,8 @@ void PromptMenu::updateTimeValues(float fTimeInSeconds)
     {
         m_fSecondsToNextRepeat -= fTimeInSeconds;
     }
+
+    updateTimeValueOverride(fTimeInSeconds);
 }
 
 //@EvanQuan : Functions not implemented

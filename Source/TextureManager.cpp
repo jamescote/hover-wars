@@ -79,6 +79,19 @@ Texture* TextureManager::loadTexture(const string& sFileName )
     return pReturnTexture;
 }
 
+unordered_map<UserInterface::eImage, Texture*> TextureManager::loadTextures(
+    const unordered_map<UserInterface::eImage, string> &mFiles,
+    const string &sDirectory)
+{
+    unordered_map<UserInterface::eImage, Texture*> textureMap;
+    for each (pair<UserInterface::eImage, string> pair in mFiles)
+    {
+        textureMap[pair.first] = loadTexture(sDirectory + pair.second);
+    }
+    return textureMap;
+
+}
+
 // Loads a Cube Map Texture; Returns Null if it failed to load for some reason.
 Texture* TextureManager::loadCubeMap(const vector<string>* sFileNames)
 {

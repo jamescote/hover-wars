@@ -1,17 +1,18 @@
 #pragma once
-#include "UserInterface/MenuInterface.h"
+#include "UserInterface/PromptInterface.h"
 
 #define NEW_GAME_OPTION "New Game"
 #define GAME_RULE "Rules"
 #define GAME_CONTROLLER "Controls"
+#define SETTINGS_OPTION "Settings"
 #define QUIT_OPTION "Quit"
 
 
-class MainInterface final : public MenuInterface
+class MainInterface final : public PromptInterface
 {
 public:
 
-    static MainInterface* getInstance(int iWidth, int iHeight);
+    static MainInterface* getInstance();
 
     MainInterface();                                        // Default Constructor
     MainInterface(const MainInterface* pCopy);              // Default Copy Constructor
@@ -32,6 +33,7 @@ private:
         NEW_GAME,
         RULE,
         CONTROLLER,
+        SETTINGS,
         EXIT
     };
 

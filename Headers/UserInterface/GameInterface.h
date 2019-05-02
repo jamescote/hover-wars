@@ -32,6 +32,9 @@ public:
         KILL_MESSAGE_KILLSTREAK,
         KILL_MESSAGE_KILL,
         KILL_MESSAGE_NEW_LEADER,
+        KILL_MESSAGE_TEAM_1_IS_LEADER,
+        KILL_MESSAGE_TEAM_2_IS_LEADER,
+        KILL_MESSAGE_TEAM_BOT_IS_LEADER,
     };
 
     enum eNotification
@@ -94,6 +97,7 @@ private:
         COMPONENT_TEAM_PLAYER_SCORE,
         COMPONENT_TEAM2_PLAYER_SCORE,
         COMPONENT_KILLSTREAK,
+        COMPONENT_SCORE_LEADER,
         COMPONENT_COUNT
     };
 
@@ -137,6 +141,9 @@ private:
 
     // Score
     void renderScores();
+    void renderScoreLeader();
+    void getScoreLeaderColorAndScore(vec3 &leaderColor, int &leaderScore);
+    bool shouldRenderScoreLeader();
     
     void renderNotifications();
     void renderResumeCountdown();
@@ -150,7 +157,7 @@ private:
     // Cooldowns
     void updateCooldowns();
     void renderCooldowns();
-    void renderCooldown(std::string label, eCooldown cooldown, float* cooldowns, GLfloat x, GLfloat y, GLfloat scale);
+    void renderCooldown(std::string label, eCooldown cooldown, float* cooldowns, int component);
     void renderCharges(float* cooldowns, HovercraftEntity* hovercraft);
 
     /*

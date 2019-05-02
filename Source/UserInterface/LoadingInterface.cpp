@@ -8,7 +8,7 @@ LoadingInterface* LoadingInterface::m_pInstance = nullptr;
 /*
     Signifies the game is loading.
 */
-LoadingInterface::LoadingInterface() : MenuInterface(
+LoadingInterface::LoadingInterface() : PromptInterface(
     // Scaling
     vector<pair<float, float>>
     {
@@ -28,16 +28,15 @@ LoadingInterface::LoadingInterface() : MenuInterface(
     }
 )
 {
-    GAME_MANAGER->addInterface(this);
 }
 
-LoadingInterface* LoadingInterface::getInstance(int iWidth, int iHeight)
+LoadingInterface* LoadingInterface::getInstance()
 {
     if (m_pInstance == nullptr)
     {
         m_pInstance = new LoadingInterface();
     }
-    m_pInstance->updateWidthAndHeight(iWidth, iHeight);
+    m_pInstance->updateWidthAndHeight(GAME_MANAGER->getWidth(), GAME_MANAGER->getHeight());
     return m_pInstance;
 }
 

@@ -39,7 +39,8 @@
 
     This rewards higher rocket accuracy instead of spamming.
 */
-#define COOLDOWN_REDUCTION_ON_HIT 0.5f
+#define ROCKET_COOLDOWN_REDUCTION_ON_HIT 0.50f
+#define SPIKES_COOLDOWN_REDUCTION_ON_HIT 0.25f
 
 /*
     Cooldowns
@@ -50,7 +51,7 @@
 
     Units: seconds
 */
-#define ROCKET_BASE_COOLDOWN        5.0f
+#define ROCKET_BASE_COOLDOWN        3.0f
 #define SPIKES_BASE_COOLDOWN        5.0f
 #define TRAIL_COOLDOWN              0.0f
 // Cooldown between dash usages
@@ -63,7 +64,7 @@
 /*
     Once spikes are activated, they are enabled for a duration before deactivating.
 */
-#define SPIKES_DURATION         1.0f
+#define SPIKES_DURATION         0.75f
 
 /*
 Power up cooldowns
@@ -99,7 +100,7 @@ Represents the trail gauge is empty.
 // Fire dimensions
 // Affects both the hitboxes and sprite size
 #define FIRE_HEIGHT             3.0
-#define FIRE_WIDTH              3.0
+#define FIRE_WIDTH              3.0 // 15 is good for wide flames
 
 /*
     Duration powerups last before disapating.
@@ -522,10 +523,10 @@ void HovercraftEntity::reduceCooldown(eAbility ability)
     switch (ability)
     {
     case ABILITY_ROCKET:
-        m_fCooldowns[COOLDOWN_ROCKET] *= COOLDOWN_REDUCTION_ON_HIT;
+        m_fCooldowns[COOLDOWN_ROCKET] *= ROCKET_COOLDOWN_REDUCTION_ON_HIT;
         break;
     case ABILITY_SPIKES:
-        m_fCooldowns[COOLDOWN_SPIKES] *= COOLDOWN_REDUCTION_ON_HIT;
+        m_fCooldowns[COOLDOWN_SPIKES] *= SPIKES_COOLDOWN_REDUCTION_ON_HIT;
         break;
     }
 }
@@ -754,13 +755,13 @@ void HovercraftEntity::handleCollision(Entity* pOther, unsigned int iColliderMsg
         if (m_bSpikesActivated)
         {   // Tell the Targetted Entity that they were hit by this bot.
            pOtherHovercraft->getHitBy(GAME_STATS->getEHovercraft(m_iID), ABILITY_SPIKES);
-           m_pSoundMngr->play(SoundManager::eSoundEvent::SOUND_SPIKES_IMPACT);
+           m_pSoundMngr->play(SoundManager::eSoundEvent::SOUND_SPIKES_IMPACT, m_bIsPlayer);
            reduceMaxCooldowns();
         }
         if (pOtherHovercraft->hasSpikesActivated())
         {
             this->getHitBy(GAME_STATS->getEHovercraft(pOtherHovercraft->getID()), ABILITY_SPIKES);
-            m_pSoundMngr->play(SoundManager::eSoundEvent::SOUND_SPIKES_IMPACT);
+            m_pSoundMngr->play(SoundManager::eSoundEvent::SOUND_SPIKES_IMPACT, m_bIsPlayer);
         }
         // Momentarily lose control of vehicle to prevent air moving
     
@@ -924,9 +925,14 @@ void HovercraftEntity::updateCooldowns(float fTimeInSeconds)
             {
                 // Ability is now off cooldown.
                 m_fCooldowns[i] = 0.0f;
-                if (static_cast<eAbility>(i) == ABILITY_ROCKET)
+                switch (static_cast<eAbility>(i))
                 {
+                case ABILITY_ROCKET:
                     m_pSoundMngr->play(SoundManager::eSoundEvent::SOUND_ROCKET_RECHARGE, m_bIsPlayer);
+                    break;
+                case ABILITY_SPIKES:
+                    m_pSoundMngr->play(SoundManager::eSoundEvent::SOUND_SPIKES_RECHARGE, m_bIsPlayer);
+                    break;
                 }
             }
         }
@@ -1168,7 +1174,7 @@ void HovercraftEntity::activateRocket()
 */
 void HovercraftEntity::activateSpikes()
 {
-    m_pSoundMngr->play(SoundManager::SOUND_SPIKES_ACTIVATE);
+    m_pSoundMngr->play(SoundManager::SOUND_SPIKES_ACTIVATE, m_bIsPlayer);
 
     m_fCooldowns[COOLDOWN_SPIKES] = m_fMaxCooldowns[COOLDOWN_SPIKES];
 
@@ -1186,7 +1192,7 @@ void HovercraftEntity::activateTrail()
     // any fuel due to trail recharge cooldown. Need to check fuel first.
     if (m_fTrailGauge > TRAIL_GAUGE_EMPTY)
     {
-        m_pSoundMngr->startLoop(SoundManager::SOUND_TRAIL, m_iID, 0);
+        m_pSoundMngr->startLoop(SoundManager::SOUND_TRAIL, m_eHovercraft);
         m_bTrailActivated = true;
         m_fSecondsSinceLastFlame = 0.0f;
         m_fSecondsSinceTrailDeactivated = 0.0f;
@@ -1201,7 +1207,7 @@ void HovercraftEntity::deactivateTrail()
 {
     if (m_bTrailActivated)
     {
-        m_pSoundMngr->endLoop(SoundManager::SOUND_TRAIL, m_iID, 0);
+        m_pSoundMngr->endLoop(SoundManager::SOUND_TRAIL, m_eHovercraft);
         m_bTrailActivated = false;
         m_vPositionOfLastFlame = vec3(numeric_limits<float>::max());    // Set Last Position so next spawn will always spawn
     }
@@ -1303,6 +1309,5 @@ void HovercraftEntity::animateSpikes()
     for (unsigned int i = 0; i < NUM_SPIKES; ++i) {
         m_pSpikeAnimations[i]->animateToNextFrame();
     }
-    m_pSoundMngr->play(SoundManager::eSoundEvent::SOUND_SPIKES_ACTIVATE);
 }
 

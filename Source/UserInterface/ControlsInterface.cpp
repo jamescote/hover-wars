@@ -5,7 +5,7 @@
 // Singleton instance
 ControlsInterface* ControlsInterface::m_pInstance = nullptr;
 
-ControlsInterface::ControlsInterface() : MenuInterface(
+ControlsInterface::ControlsInterface() : PromptInterface(
     // Scaling
     vector<pair<float, float>>
     {
@@ -20,16 +20,15 @@ ControlsInterface::ControlsInterface() : MenuInterface(
     }
 )
 {
-    GAME_MANAGER->addInterface(this);
 }
 
-ControlsInterface* ControlsInterface::getInstance(int iWidth, int iHeight)
+ControlsInterface* ControlsInterface::getInstance()
 {
     if (m_pInstance == nullptr)
     {
         m_pInstance = new ControlsInterface();
     }
-    m_pInstance->updateWidthAndHeight(iWidth, iHeight);
+    m_pInstance->updateWidthAndHeight(GAME_MANAGER->getWidth(), GAME_MANAGER->getHeight());
     return m_pInstance;
 }
 

@@ -1,16 +1,16 @@
 #pragma once
-#include "UserInterface/MenuInterface.h"
+#include "UserInterface/PromptInterface.h"
 
 #define BACK_TO_MAIN_MENU_OPTION "Return to Main Menu"
 #define AWARDS_OPTION "Awards"
 
 struct EndGameStat;
 
-class PostgameInterface final : public MenuInterface
+class PostgameInterface final : public PromptInterface
 {
 public:
 
-    static PostgameInterface* getInstance(int iWidth, int iHeight);
+    static PostgameInterface* getInstance();
 
     // Default Constructor
     PostgameInterface();
@@ -93,11 +93,14 @@ private:
     };
     static PostgameInterface* m_pInstance;
 
-    void renderPlacement();
+    void renderPlacement(bool renderBots);
     void renderFreeForAll(const vector<EndGameStat> &endGameStats);
-    void renderTeamBots(const vector<EndGameStat> &endGameStats);
-    void renderPlayersVsBots(const vector<EndGameStat> &endGameStats);
-    void renderTeamPlayers(const vector<EndGameStat> &endGameStats);
+    void renderTeamBots(const vector<EndGameStat> &endGameStats, bool renderBots);
+    void renderPlayersVsBots(const vector<EndGameStat> &endGameStats, bool renderBots);
+    void renderTeamPlayers(const vector<EndGameStat> &endGameStats, bool renderBots);
     void renderScore(int place, int score);
     void renderOption();
+
+    bool shouldRenderPlacement2(eGameMode gameMode, int hovercraftCount, int playerCount, int botCount);
+    bool shouldRenderPlacement3(eGameMode gameMode, int hovercraftCount, int playerCount, int botCount);
 };

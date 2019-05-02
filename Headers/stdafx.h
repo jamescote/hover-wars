@@ -2,8 +2,12 @@
 // or project specific include files that are used frequently, but
 // are changed infrequently
 //
-
 #pragma once
+
+/*
+    Game version. This is displayed in the rules interface.
+*/
+#define GAME_VERSION "v1.2.1"
 
 #define GLM_ENABLE_EXPERIMENTAL
 
@@ -76,7 +80,7 @@ using namespace physx;
 #define SECONDS_PER_MINUTE  60
 
 #define KEYS                349
-#define MAX_PLAYER_JOYSTICK GLFW_JOYSTICK_4
+#define MAX_JOYSTICK_COUNT  4
 #define MIN_PLAYER_COUNT    1
 #define MAX_PLAYER_COUNT    4
 #define MIN_BOT_COUNT       0
@@ -84,116 +88,79 @@ using namespace physx;
 #define MAX_HOVERCRAFT_COUNT MAX_PLAYER_COUNT + MAX_BOT_COUNT
 #define XBOX_CONTROLLER     "Xbox"
 #define EMPTY_CONTROLLER    "Empty Controller"
-// m_pJoystickAxes
-#define AXIS_LEFT_STICK_X   0
-#define AXIS_LEFT_STICK_Y   1
-#define AXIS_RIGHT_STICK_X  2
-#define AXIS_RIGHT_STICK_Y  3
-#define AXIS_LEFT_TRIGGER   4
-#define AXIS_RIGHT_TRIGGER  5
-// m_joystickButtons
-#define BUTTON_A            0
-#define BUTTON_B            1
-#define BUTTON_X            2
-#define BUTTON_Y            3
-#define BUTTON_LEFT_BUMPER  4
-#define BUTTON_RIGHT_BUMPER 5
-#define BUTTON_BACK         6
-#define BUTTON_START        7
-#define BUTTON_LEFT_STICK   8
-#define BUTTON_RIGHT_STICK  9
-#define BUTTON_UP           10
-#define BUTTON_RIGHT        11
-#define BUTTON_DOWN         12
-#define BUTTON_LEFT         13
-#define MAX_BUTTON_INDEX    14
-// XBox controllers seem to have 2 more buttons (14, 15)
-// I have not been able to found out what these buttons actually represent.
-// Instead we will use the triggers as button states
-// so they can detect just pressed states
-#define TRIGGER_LEFT        14
-#define TRIGGER_RIGHT       15
-//
-#define MAX_BUTTON_COUNT    16
-// Joystick/trigger values
-#define JOYSTICK_IS_MAX     1.0f
-#define JOYSTICK_IS_MIN     -1.0f
-#define JOYSTICK_IS_NEUTRAL 0.0f
-#define TRIGGER_IS_NETURAL  -1.0f
-#define TRIGGER_IS_FULL     1.0f
+
+// XBOX Joystick Axes
+#define XBOX_MASK                0x00
+#define XBOX_BUTTON_A            0
+#define XBOX_BUTTON_B            1
+#define XBOX_BUTTON_X            2
+#define XBOX_BUTTON_Y            3
+#define XBOX_BUTTON_LEFT_BUMPER  4
+#define XBOX_BUTTON_RIGHT_BUMPER 5
+#define XBOX_BUTTON_BACK         6
+#define XBOX_BUTTON_START        7
+#define XBOX_BUTTON_LEFT_STICK   8
+#define XBOX_BUTTON_RIGHT_STICK  9
+#define XBOX_BUTTON_UP           10
+#define XBOX_BUTTON_RIGHT        11
+#define XBOX_BUTTON_DOWN         12
+#define XBOX_BUTTON_LEFT         13
+#define XBOX_TRIGGER_LEFT        14
+#define XBOX_TRIGGER_RIGHT       15
+#define AXIS_LEFT_STICK_X        0
+#define AXIS_LEFT_STICK_Y        1
+#define AXIS_RIGHT_STICK_X       2
+#define AXIS_RIGHT_STICK_Y       3
+#define AXIS_LEFT_TRIGGER        4
+#define AXIS_RIGHT_TRIGGER       5
+
+#define PS4_MASK                 0x80000000
+#define PS4_BUTTON_X             1
+#define PS4_BUTTON_O             2
+#define PS4_BUTTON_SQUARE        0
+#define PS4_BUTTON_TRIANGLE      3
+#define PS4_BUTTON_OPTIONS       9
+#define PS4_BUTTON_SHARE         8
+#define PS4_BUTTON_R1            5
+#define PS4_BUTTON_R2            7
+#define PS4_BUTTON_R3            11
+#define PS4_BUTTON_L1            4
+#define PS4_BUTTON_L2            6 
+#define PS4_BUTTON_L3            10
+#define PS4_BUTTON_LEFT          17
+#define PS4_BUTTON_RIGHT         15
+#define PS4_BUTTON_UP            14
+#define PS4_BUTTON_DOWN          16
+#define PS4_BUTTON_TRACKPAD      13
+#define PS4_BUTTON_PS            12
+#define PS4_AXIS_LEFT_X          0
+#define PS4_AXIS_LEFT_Y          1
+#define PS4_AXIS_RIGHT_X         2
+#define PS4_AXIS_RIGHT_Y         5
+#define PS4_AXIS_L2              3
+#define PS4_AXIS_R2              4
 
 /*
-Actor names
+    The actual button count for XBOX controllers is 14.
+    As we treat the left and right triggers (which are actually axes)
+    as buttons, we increase the value to 16.
+    This is important for iterating through the joystick buttons
+    in Menu::updateJoystickCommands() to ensure we check the trigger
+    input states.
 
-Interactable entities have actor names so the game can discern what type of
-object they are. This is especially important for collisions, as collisions
-between different kinds of entities determine the results.
-
-Actor names are composed of 2 characters. The order of tokens are:
-
-1. Type
-
-2. Subtype or Owner
+    As a result, MIN_BUTTON_COUNT will be 2 more than the XBOX_BUTTON_COUNT to
+    ensure we iterate over the xbox triggers in Menu::updateJoystickCommands().
 */
-// Type
-#define TYPE_WORLD      "w"
-#define TYPE_POWERUP    "p"
-#define TYPE_TRAIL      "t"
-#define TYPE_PLAYER     "P"
-#define TYPE_HOVERCRAFT "h"
-#define TYPE_BOT        "b"
-#define TYPE_ROCKET     "r"
-#define TYPE_SPIKES     "s"
-
-#define C_TYPE_WORLD      'w'
-#define C_TYPE_POWERUP    'p'
-#define C_TYPE_TRAIL      't'
-#define C_TYPE_PLAYER     'P'
-#define C_TYPE_BOT        'b'
-#define C_TYPE_HOVERCRAFT 'h'
-#define C_TYPE_ROCKET     'r'
-#define C_TYPE_SPIKES     's'
-
-// Subtype
-#define SUBTYPE_WALL          "W"
-#define SUBTYPE_GROUND        "g"
-#define SUBTYPE_POWERUP_SPEED "S"
-
-#define C_SUBTYPE_WALL          'W'
-#define C_SUBTYPE_GROUND        'g'
-#define C_SUBTYPE_POWERUP_SPEED 'S'
-
-// Owner
-#define OWNER_PLAYER_1 "1"
-#define OWNER_PLAYER_2 "2"
-#define OWNER_PLAYER_3 "3"
-#define OWNER_PLAYER_4 "4"
-#define OWNER_BOT_1    "5"
-#define OWNER_BOT_2    "6"
-#define OWNER_BOT_3    "7"
-#define OWNER_BOT_4    "8"
-
-#define C_OWNER_PLAYER_1 '1'
-#define C_OWNER_PLAYER_2 '2'
-#define C_OWNER_PLAYER_3 '3'
-#define C_OWNER_PLAYER_4 '4'
-#define C_OWNER_BOT_1    '5'
-#define C_OWNER_BOT_2    '6'
-#define C_OWNER_BOT_3    '7'
-#define C_OWNER_BOT_4    '8'
-
-// Don't use these
-#define NAME_PLAYER  "p"
-#define NAME_BOT     "b"
-#define NAME_ROCKET  "r"
-#define NAME_TRAIL   "t"
-#define NAME_SPIKES  "s"
-#define NAME_WALL    "w"
-#define NAME_GROUND  "g"
-
-// Don't use these
-#define NAME_SPHERE  "sphere"
-#define NAME_MESH    "mesh"
+#define XBOX_BUTTON_COUNT       14
+#define PS4_BUTTON_COUNT        18
+#define MIN_BUTTON_COUNT        XBOX_BUTTON_COUNT + 2
+#define MAX_BUTTON_COUNT        PS4_BUTTON_COUNT
+// Joystick/trigger values
+#define JOYSTICK_IS_MAX         1.0f
+#define JOYSTICK_IS_MIN         -1.0f
+#define JOYSTICK_IS_NEUTRAL     0.0f
+#define TRIGGER_IS_NETURAL      -1.0f
+#define TRIGGER_IS_FULL         1.0f
 
 
 // Mapping potential types from the scene loader to corresponding enums
@@ -204,7 +171,7 @@ const std::unordered_map<string, eBoundingBoxTypes> BOUNDING_BOX_MAP =
 };
 
 /* Manager Defines */
-#define COMMAND_HANDLER     CommandHandler::getInstance()
+#define MENU_MANAGER        MenuManager::getInstance()
 #define EMITTER_ENGINE      EmitterEngine::getInstance()
 #define ENTITY_MANAGER      EntityManager::getInstance()
 #define GAME_MANAGER        GameManager::getInstance()
@@ -217,6 +184,7 @@ const std::unordered_map<string, eBoundingBoxTypes> BOUNDING_BOX_MAP =
 #define SOUND_MANAGER       SoundManager::getInstance()
 #define SPATIAL_DATA_MAP    SpatialDataMap::getInstance()
 #define TEXTURE_MANAGER     TextureManager::getInstance()
+#define UI_MANAGER          UserInterfaceManager::getInstance()
 
 // From Boilerplate code,
 // Shouldn't need to modify this.

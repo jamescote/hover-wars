@@ -8,7 +8,7 @@ public:
     // TODO nothing to destruct?
     ~PregameMenu() {}
 
-    static Menu* getInstance();
+    static PregameMenu* getInstance();
     int getPlayerCount() const { return m_iPlayerCount; };
     int getBotCount() const { return m_iBotCount; };
     int getGameTime() const { return m_fGameTime; };
@@ -22,12 +22,13 @@ private:
 
     void select(eFixedCommand command);
 
-    void moveCursor(eFixedCommand command);
+    // @Override
+    bool moveCursorOverride(eFixedCommand command);
 
     void back();
 
     // @Override
-    void enter();
+    void enterOverride();
 
     int m_iBotCount;
     int m_iPlayerCount;

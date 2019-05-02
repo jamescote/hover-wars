@@ -1,19 +1,18 @@
 #include "EntityManager.h"
 #include "GameManager.h"
-#include "CommandHandler.h"
+#include "Menus/MenuManager.h"
 #include "ArtificialIntelligence/AIManager.h"
 #include "SceneLoader.h"
 #include "ShaderManager.h"
 #include "UserInterface/StartInterface.h"
-#include "Menus/PostgameMenu.h"
+#include "Menus/EndgameMenu.h"
 #include "GameStats.h"
 #include "UserInterface/GameInterface.h"
-#include "UserInterface/LoadingInterface.h"
-#include "UserInterface/PostgameInterface.h"
 #include "Menus/GameMenu.h"
 #include "Menus/StartMenu.h"
 #include "Menus/LoadingMenu.h"
 #include "TextureManager.h"
+#include "UserInterface/UserInterfaceManager.h"
 
 // Unit: seconds
 #define GAME_OVER_TIME 0.0f
@@ -78,7 +77,9 @@ GameManager::GameManager(GLFWwindow* rWindow)
 
     m_eKeyboardHovercraft = HOVERCRAFT_PLAYER_1;
 
-    m_pCommandHandler = COMMAND_HANDLER;
+    m_pUserInterfaceManager = UI_MANAGER;
+
+    m_pMenuManager = MENU_MANAGER;
 
     m_pPhysicsManager = PHYSICS_MANAGER;
 
@@ -157,14 +158,11 @@ GameManager::~GameManager()
     if (nullptr != m_pShaderManager)    // Shader Manager
         delete m_pShaderManager;
 
-    // User Interface
-    for (UserInterface* ui : m_vInterfaceInstances) {
-        delete ui;
-    }
-    m_vInterfaceInstances.clear();
+    if (nullptr != m_pUserInterfaceManager)
+        delete m_pUserInterfaceManager;
 
-    if (nullptr != m_pCommandHandler)   // Command Handler
-        delete m_pCommandHandler;
+    if (nullptr != m_pMenuManager)   // Command Handler
+        delete m_pMenuManager;
 
     if (nullptr != m_pAIManager)        // AI Manager
         delete m_pAIManager;
@@ -176,20 +174,6 @@ GameManager::~GameManager()
         delete m_pGameStats;
 }
 
-
-/*
-    As UserInterface instances are generated, they are each added to
-    the m_vInterfaceInstances list.
-    At the end of the program, all interfaces are deleted.
-*/
-void GameManager::addInterface(UserInterface* ui)
-{
-    m_vInterfaceInstances.push_back(ui);
-}
-void GameManager::setCurrentInterface(MenuInterface* ui)
-{
-    m_pMenuInterface = ui;
-}
 /*
     Start rendering game to screen. This call with block until the game loop
     ends (it will hang the thread). When this function returns, the program
@@ -216,8 +200,8 @@ bool GameManager::renderGraphics()
     // Execute all commands for this frame
     // These should be done before the EntityManager updates so that the
     // environment can respond to the commands issued this frame.
-    m_pCommandHandler->update(m_fFrameDeltaTime);
-    m_pMenuInterface->update(m_fFrameDeltaTime);
+    m_pMenuManager->update(m_fFrameDeltaTime);
+    m_pUserInterfaceManager->update(m_fFrameDeltaTime);
     checkIfStartedGameOver();
 
     if (m_bInGame)
@@ -258,9 +242,9 @@ void GameManager::calculateScreenDimensions(unsigned int playerCount)
 void GameManager::spawnHovercrafts(unsigned int playerCount, unsigned int botCount, eGameMode gameMode)
 {
     // Local Variables
-    bool bTeamAI = (GAMEMODE_TEAM_AI_SOLO_PLAYERS == gameMode || GAMEMODE_TEAMS_AI_VS_PLAYERS == gameMode);
-    bool bTeamPlayers = (GAMEMODE_TEAMS_AI_VS_PLAYERS == gameMode);
-    bool bSplitTeamPlayers = (GAMEMODE_TEAMS_PLAYERS == gameMode);
+    bool bTeamAI = (GAMEMODE_TEAM_BOTS_VS_SOLO_PLAYERS == gameMode || GAMEMODE_TEAMS_BOTS_VS_PLAYERS == gameMode);
+    bool bTeamPlayers = (GAMEMODE_TEAMS_BOTS_VS_PLAYERS == gameMode);
+    bool bSplitTeamPlayers = (GAMEMODE_TEAMS_PLAYERS1_VS_PLAYERS2_VS_BOTS == gameMode);
     vector< vec3 > vColors(COLORS, COLORS + sizeof(COLORS) / sizeof(COLORS[0]));    // Load all colors into a set to pick from.
 
     m_vPlayerColors.clear();
@@ -434,7 +418,7 @@ void GameManager::updateEnvironment()
     // is paused.
     m_pSoundManager->update();
     // The game interface should update after the EntityManager and
-    // CommandHandler has changed in order to reflect their changes.
+    // MenuManager has changed in order to reflect their changes.
     // It also cannot update inside the EntityManager since it is able
     // to be updated while the EntityManager is paused.
     m_pGameInterface->update(m_fFrameDeltaTime);
@@ -443,12 +427,12 @@ void GameManager::updateEnvironment()
 /*
     Initialize everything necessary to start a new game.
 
-    @param playerCount  player hovercrafts to register
-    @param botCount     bot hovercrafts to register
-    @param botDifficulty of bots
-    @param gameTime     of game, in seconds
-    @param eGameMode    of game
-    @param mapNumber    of map
+    @param[in] playerCount      player hovercrafts to register
+    @param[in] botCount         bot hovercrafts to register
+    @param[in] botDifficulty    of bots
+    @param[in] gameTime         of game, in seconds
+    @param[in] eGameMode        of game
+    @param[in] mapNumber        of map
 */
 void GameManager::initializeNewGame(unsigned int playerCount,
                                     unsigned int botCount,
@@ -459,7 +443,7 @@ void GameManager::initializeNewGame(unsigned int playerCount,
                                     bool scoreLossEnabled)
 {
     // Before we initialize, set to LoadingMenu and Interface
-    m_pCommandHandler->setCurrentMenu(LoadingMenu::getInstance());
+    m_pMenuManager->setCurrentMenu(LoadingMenu::getInstance());
 
     // We intialize all values for the game to immediately start
     m_pPhysicsManager->initPhysics(true);
@@ -506,7 +490,7 @@ void GameManager::initializeNewGame(unsigned int playerCount,
     // Only after everything has loaded, switch to the game menu.
     // Don't need to switch to GameInterface, as the GameInterface is directly
     // rendered for each player.
-    m_pCommandHandler->setCurrentMenu(GameMenu::getInstance());
+    m_pMenuManager->setCurrentMenu(GameMenu::getInstance());
 }
 
 /*
@@ -659,7 +643,7 @@ void GameManager::endGame()
     cout << "GameManger::endGame()" << endl;
     m_bInGame = false;
     m_bPaused = true;
-    m_pCommandHandler->setCurrentMenu(PostgameMenu::getInstance());
+    m_pMenuManager->setCurrentMenu(EndgameMenu::getInstance());
     m_pEntityManager->purgeEnvironment();
 
     cleanupFrameBuffers();
@@ -728,7 +712,7 @@ void GameManager::drawScene()
         if (!m_bInGame)
         {
             // In game check is to avoid double rendering the user interface.
-            m_pMenuInterface->render();
+            m_pUserInterfaceManager->render();
         }
         
 
@@ -906,8 +890,10 @@ bool GameManager::initialize()
     startedGameOver = false;
     m_fGameOverTime = GAME_OVER_TIME;
 
-    m_pCommandHandler->setCurrentMenu(StartMenu::getInstance());
-    m_pMenuInterface = StartInterface::getInstance(m_iWidth, m_iHeight);
+    m_pMenuManager->setCurrentMenu(StartMenu::getInstance());
+    // Whenever a menu is set, so is the corresponding interface. Does not need
+    // to be done manually here.
+    // m_pUserInterfaceManager->setCurrentInterface(StartInterface::getInstance());
 
     // Return error results
     return true; 
@@ -958,7 +944,7 @@ void GameManager::resizeWindow( int iWidth, int iHeight )
         generateFrameBuffer(i);
 
     m_pEntityManager->updateWidthAndHeight(m_iSplitWidth, m_iSplitHeight);
-    m_pMenuInterface->updateWidthAndHeight(iWidth, iHeight);
+    m_pUserInterfaceManager->updateWidthAndHeight(iWidth, iHeight);
 }
 
 /*

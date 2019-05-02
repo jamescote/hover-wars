@@ -10,11 +10,11 @@ class Entity;
 class HovercraftEntity;
 
 /*
-Manages all sounds. Provides an interfaces for other classes to play sound
-events.
+    Manages all sounds. Provides an interfaces for other classes to play sound
+    events.
 
-@author Evan Quan
-@author Jianan Ding
+    @author Evan Quan
+    @author Jianan Ding
 */
 class SoundManager final
 {
@@ -22,8 +22,8 @@ public:
     ~SoundManager();
 
     /*
-    Sound events correspond to world events.
-    They may be composed of multiple individual sounds.
+        Sound events correspond to world events.
+        They may be composed of multiple individual sounds.
     */
     enum eSoundEvent
     {
@@ -34,6 +34,7 @@ public:
 
         SOUND_SPIKES_ACTIVATE,
         SOUND_SPIKES_IMPACT,
+        SOUND_SPIKES_RECHARGE,
 
         SOUND_TRAIL,
         SOUND_TRAIL_1,
@@ -74,7 +75,7 @@ public:
         SOUND_POWERUP_SPEED_ACTIVATE,
         SOUND_POWERUP_SPEED_DEACTIVATE,
 
-        SOUND_MUSIC_INGAME,
+        SOUND_MUSIC_OUTRUN,
         SOUND_MUSIC_PAUSE,
 
         SOUND_UI_CURSOR_MOVE,
@@ -82,7 +83,11 @@ public:
 
         // For resuming the game
         SOUND_UI_END_GAME_CHEER,
+
         SOUND_UI_NEW_LEADER,
+        SOUND_UI_TEAM_LEADER_1,
+        SOUND_UI_TEAM_LEADER_2,
+        SOUND_UI_TEAM_LEADER_BOTS,
         // For major time warnings
         SOUND_UI_TIME_REMAINING_WARNING,
         SOUND_UI_TIME_REMAINING_LOOP,
@@ -90,6 +95,8 @@ public:
         SOUND_UI_RESUME_COUNTDOWN,
         // For controller connecting
         SOUND_UI_CONTROLLER_CONNECT,
+
+        SOUND_UI_INSERT_COIN,
     };
 
     void play(eSoundEvent sound);
@@ -99,8 +106,8 @@ public:
     // TODO figure out sound at locations
     void play(eSoundEvent sound, vec3 location);
 
-    void startLoop(eSoundEvent sound, int entityID, int loopID);
-    void endLoop(eSoundEvent sound, int entityID, int loopID);
+    void startLoop(eSoundEvent sound, eHovercraft hovercraft);
+    void endLoop(eSoundEvent sound, eHovercraft hovercraft);
 
     void startLoop(eSoundEvent sound, vec3 location, int entityID, int loopID);
     void endLoop(eSoundEvent sound, vec3 location, int entityID, int loopID);
@@ -130,6 +137,9 @@ public:
 
     void start();
     void update();
+
+    bool hasMusicEnabled() const { return m_bMusicEnabled; }
+    void setMusicEnabled(bool bMusicEnabled) { m_bMusicEnabled = bMusicEnabled; }
 private:
 
     FMOD_3D_ATTRIBUTES testAttrubute;
@@ -190,6 +200,8 @@ private:
     float volumeTodB(float volume);
     bool isPaused = false;
 
+    bool m_bMusicEnabled;
+
     FMOD_VECTOR vectorToFmod(const vec3& vPosition);
 
     /*
@@ -235,6 +247,8 @@ private:
                                            "event:/spikes/spikes_impact_02",
                                            "event:/spikes/spikes_impact_03",
                                            "event:/spikes/spikes_impact_04",
+                                         }},
+        {SOUND_SPIKES_RECHARGE,           { "event:/spikes/spikes_recharge",
                                          }},
         {SOUND_PULSE_ACTIVATE,           { "event:/pulse/pulse_activate",
                                          }},
@@ -312,7 +326,7 @@ private:
                                          }},
         {SOUND_POWERUP_SPEED_DEACTIVATE, { "event:/powerup/speedboost_end",
                                          }},
-        {SOUND_MUSIC_INGAME,                   { "event:/background/music_loop_retro",
+        {SOUND_MUSIC_OUTRUN,                   { "event:/background/music_loop_retro",
                                          }},
         {SOUND_MUSIC_PAUSE,                    { "event:/background/music_loop_pause",
                                          }},
@@ -322,11 +336,11 @@ private:
                                            "event:/ui/cursor/cursor_move_04",
                                            "event:/ui/cursor/cursor_move_05",
                                          }},
-        {SOUND_UI_CURSOR_SELECT,         { "event:/ui/cursor/cursor_move_01",
-                                           "event:/ui/cursor/cursor_move_02",
-                                           "event:/ui/cursor/cursor_move_03",
-                                           "event:/ui/cursor/cursor_move_04",
-                                           "event:/ui/cursor/cursor_move_05",
+        {SOUND_UI_CURSOR_SELECT,         { "event:/ui/cursor/cursor_select_01",
+                                           "event:/ui/cursor/cursor_select_02",
+                                           "event:/ui/cursor/cursor_select_03",
+                                           "event:/ui/cursor/cursor_select_04",
+                                           "event:/ui/cursor/cursor_select_05",
                                          }},
         {SOUND_UI_END_GAME_CHEER,        { "event:/ui/notification/end_game_cheer",
                                          }},
@@ -336,9 +350,17 @@ private:
                                          }},
         {SOUND_UI_NEW_LEADER,            { "event:/ui/notification/new_leader",
                                          }},
-        {SOUND_UI_RESUME_COUNTDOWN,        { "event:/ui/notification/countdown_tick",
+        {SOUND_UI_TEAM_LEADER_1,         { "event:/ui/notification/team1_leader",
+                                         }},
+        {SOUND_UI_TEAM_LEADER_2,         { "event:/ui/notification/team2_leader",
+                                         }},
+        {SOUND_UI_TEAM_LEADER_BOTS,      { "event:/ui/notification/teambot_leader",
+                                         }},
+        {SOUND_UI_RESUME_COUNTDOWN,      { "event:/ui/notification/countdown_tick",
                                          }},
         {SOUND_UI_CONTROLLER_CONNECT,    { "event:/ui/notification/controller_connect",
+                                         }},
+        {SOUND_UI_INSERT_COIN,           { "event:/ui/insert_coin",
                                          }},
     };
 };

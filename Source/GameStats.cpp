@@ -4,7 +4,7 @@
 #include "EntityHeaders/HovercraftEntity.h"
 
 /*
-Number of killstreaks against another player to count as domination
+    Number of killstreaks against another player to count as domination
 */
 #define DOMINATION_COUNT 3
 
@@ -13,55 +13,55 @@ Number of killstreaks against another player to count as domination
 */
 #define HOVERCRAFT_COUNT_TO_ENABLE_POWERUP 3
 /*
-After total score gained has been calculated, multiply score gained by value if
-hit a bot
+    After total score gained has been calculated, multiply score gained by
+    value if hit a bot
 */
 #define BOT_SCORE_MULTIPLIER_EASY   1.0
 #define BOT_SCORE_MULTIPLIER_MEDIUM 0.5
 #define BOT_SCORE_MULTIPLIER_HARD   0.25
 /*
-Base points gained for hitting a hovercraft
+    Base points gained for hitting a hovercraft
 */
 #define POINTS_GAINED_HIT_BASE 50
 /*
-Number of extra points gained when a player gets revenge
+    Number of extra points gained when a player gets revenge
 */
 #define POINTS_GAINED_HIT_REVENGE 100
 /*
-Number of extra points gained when a player gets the first kill
+    Number of extra points gained when a player gets the first kill
 */
 #define POINTS_GAINED_FIRST_BLOOD 150
 /*
-Players gain additional points against other players based on their current
-total killstreak. This gives players an incentive to not get hit.
+    Players gain additional points against other players based on their current
+    total killstreak. This gives players an incentive to not get hit.
 */
 #define POINTS_GAINED_PER_KILLSTREAK 20
 
 /*
-Players gain additional points against other played based on that hit player's
-current total killstreak. This gives players that have high killstreaks higher
-priority targets to attack.
+    Players gain additional points against other played based on that hit
+    player's current total killstreak. This gives players that have high
+    killstreaks higher priority targets to attack.
 */
 #define POINTS_GAINED_PER_HIT_KILLSTREAK 10
 /*
-Base points for picking up a power up
+    Base points for picking up a power up
 
-@Deprecated
+    @Deprecated
 */
 #define POINTS_GAINED_PICKUP_POWERUP 10
 /*
-Base points lost for getting hit
+    Base points lost for getting hit
 */
 #define POINTS_LOST_GOT_HIT 30
 /*
-Additional points lost per own killstreak. This makes having a large killstreak
-risky as you will lose more points.
+    Additional points lost per own killstreak. This makes having a large
+    killstreak risky as you will lose more points.
 */
 #define POINTS_LOST_PER_KILLSTREAK 10
 /*
-Notifies a killstreak message once player hits a milestone.
+    Notifies a killstreak message once player hits a milestone interval
 */
-#define CURRENT_TOTAL_KILLSTREAK_MILESTONE 10
+#define CURRENT_TOTAL_KILLSTREAK_MILESTONE 5
 
 
 // Singleton instance
@@ -96,19 +96,17 @@ GameStats::~GameStats()
 
     This should be called at the start of every game, or if the game resets.
     It should also be called AFTER players and bots have been initialized.
-
-    @param aiType   if AI on the same team, if they hit each other, there is no
-    point change.
 */
 void GameStats::reinitialize(int playerCount,
     int botCount,
-    eGameMode aiType,
+    eGameMode gameMode,
     eBotDifficulty botDifficulty,
     bool scoreLossEnabled)
 {
     m_iPlayerCount = playerCount;
     m_iBotCount = botCount;
-    m_eGameMode = aiType;
+    m_iHovercraftCount = playerCount + botCount;
+    m_eGameMode = gameMode;
     m_eBotDifficulty = botDifficulty;
     m_bScoreLossEnabled = scoreLossEnabled;
     switch (m_eBotDifficulty)
@@ -220,18 +218,20 @@ void GameStats::addScore(eHovercraft hovercraft, eAddScoreReason reason)
     case HIT_PLAYER_2:
     case HIT_PLAYER_3:
     case HIT_PLAYER_4:
-        hit(hovercraft, scoreReasonToHovercraft.at(reason));
+        hitHovercraft(hovercraft, scoreReasonToHovercraft.at(reason));
         break;
     case PICKUP_POWERUP:
-        // @Deprecated
+        // @Deprecated until powerup update
         pickupPowerup(hovercraft);
         break;
     }
     checkForNewScoreLeader(hovercraft);
+    checkForNewTeamLeader();
 #ifdef _DEBUG
     debugPrintAllScores();
 #endif // _DEBUG
-
+    cout << "first blood happend: " << firstBloodHappened << endl;
+    cout << "queue blood happend: " << queueFirstBlood << endl;
 }
 
 /*
@@ -241,14 +241,26 @@ void GameStats::addScore(eHovercraft hovercraft, eAddScoreReason reason)
 void GameStats::checkForNewScoreLeader(eHovercraft candidate)
 {
     int newLargestScore = getLargestScore();
-    int oldLargestScore = globalStats[eGlobalStat::SCORE_LARGEST];
+    int oldLargestScore = globalStats[eGlobalStat::SCORE_LARGEST_HOVERCRAFT];
 
+    cout << "newLargestScore: " << newLargestScore << endl;
+    cout << "oldLargestScore: " << oldLargestScore << endl;
     if (newLargestScore != oldLargestScore)
     {
-        globalStats[eGlobalStat::SCORE_LARGEST] = newLargestScore;
+        cout << "updating new largest score " << endl;
+        globalStats[eGlobalStat::SCORE_LARGEST_HOVERCRAFT] = newLargestScore;
         updateScoreLeaders(candidate);
     }
 
+}
+
+/*
+    After the scores have been updated, check if there is a new team leader.
+    If so, send a new team notification.
+*/
+void GameStats::checkForNewTeamLeader()
+{
+    /* TODO */
 }
 
 // Predicate for filtering old leaders
@@ -269,7 +281,7 @@ void GameStats::updateScoreLeaders(eHovercraft candidate)
                                          m_eScoreLeaders.end(),
                                          notScoreLeader),
                           m_eScoreLeaders.end());
-    if (!FuncUtils::contains(m_eScoreLeaders, candidate) && hasLargestScore(candidate))
+    if ((!FuncUtils::contains(m_eScoreLeaders, candidate)) && hasLargestScore(candidate))
     {
         // Add new leader
         m_eScoreLeaders.push_back(candidate);
@@ -293,6 +305,58 @@ void GameStats::updateScoreLeaders(eHovercraft candidate)
 
 }
 
+
+/*
+    Update the team scores.
+    If the point change is positive, we will update the 
+
+    @param[in] hovercraft   that was responsible for the point change.
+    @param[in] points       changed for the specified hovercraft.
+*/
+void GameStats::updateTeamScores(eHovercraft hovercraft, int points)
+{
+    // Update team scores if team game mode
+    switch (m_eGameMode)
+    {
+    case GAMEMODE_TEAMS_BOTS_VS_PLAYERS:
+        if (isBot(hovercraft))
+        {
+            updateTeamScore(SCORE_BOT_TEAM, points);
+        }
+        else
+        {
+            updateTeamScore(SCORE_PLAYER_TEAM1, points);
+        }
+        break;
+    case GAMEMODE_TEAM_BOTS_VS_SOLO_PLAYERS:
+        if (isBot(hovercraft))
+        {
+            // Only bots have a team
+            updateTeamScore(SCORE_BOT_TEAM, points);
+        }
+        break;
+    case GAMEMODE_TEAMS_PLAYERS1_VS_PLAYERS2_VS_BOTS:
+        switch (hovercraft)
+        {
+        case HOVERCRAFT_PLAYER_1:
+        case HOVERCRAFT_PLAYER_2:
+            updateTeamScore(SCORE_PLAYER_TEAM1, points);
+            break;
+        case HOVERCRAFT_PLAYER_3:
+        case HOVERCRAFT_PLAYER_4:
+            updateTeamScore(SCORE_PLAYER_TEAM2, points);
+            break;
+        default:
+            updateTeamScore(SCORE_BOT_TEAM, points);
+        }
+    }
+}
+
+void GameStats::updateTeamScore(eGlobalStat team, int points)
+{
+    globalStats[team] = FuncUtils::max(globalStats[team] + points, 0);
+}
+
 void GameStats::debugPrintAllScores()
 {
     for (int p = 0; p < m_iPlayerCount; p++)
@@ -311,7 +375,7 @@ void GameStats::debugPrintAllScores()
         cout << "Score leader: " << leader  << ": " << get(leader, SCORE_CURRENT) << endl;
     }
 
-    cout << "Highest score: " << get(eGlobalStat::SCORE_LARGEST) << endl;
+    cout << "Highest score: " << get(eGlobalStat::SCORE_LARGEST_HOVERCRAFT) << endl;
 
 }
 
@@ -367,7 +431,7 @@ void GameStats::useAbility(eHovercraft hovercraft, eAbility ability)
 
     Updates killstreaks and scores.
 */
-void GameStats::hit(eHovercraft attacker, eHovercraft hit)
+void GameStats::hitHovercraft(eHovercraft attacker, eHovercraft hit)
 {
     if (isOnSameTeam(attacker, hit))
     {
@@ -452,6 +516,7 @@ int GameStats::getScoreGainedForAttacker(eHovercraft attacker, eHovercraft hit)
     } else {
         firstBloodBonus = POINTS_GAINED_FIRST_BLOOD;
         queueFirstBlood = true;
+        cout << "queuFirstBlood" << endl;
         m_pGameInterface->displayKillMessage(attacker, hit, GameInterface::eKillMessage::KILL_MESSAGE_FIRST_BLOOD);
     }
     int totalGained = basePoints + killstreakBonus + killstreakEndingBonus + revengeBonus + firstBloodBonus;
@@ -496,41 +561,7 @@ void GameStats::addScore(eHovercraft attacker, int points)
     stats[attacker][SCORE_CURRENT] += points;
     stats[attacker][SCORE_TOTAL] += points;
 
-    // Update team scores if team game mode
-    switch (m_eGameMode)
-    {
-    case GAMEMODE_TEAMS_AI_VS_PLAYERS:
-        if (isBot(attacker))
-        {
-            globalStats[TEAM_BOT_SCORE] += points;
-        }
-        else
-        {
-            globalStats[TEAM_PLAYER_SCORE] += points;
-        }
-        break;
-    case GAMEMODE_TEAM_AI_SOLO_PLAYERS:
-        if (isBot(attacker))
-        {
-            // Only bots have a team
-            globalStats[TEAM_BOT_SCORE] += points;
-        }
-        break;
-    case GAMEMODE_TEAMS_PLAYERS:
-        switch (attacker)
-        {
-        case HOVERCRAFT_PLAYER_1:
-        case HOVERCRAFT_PLAYER_2:
-            globalStats[TEAM_PLAYER_SCORE] += points;
-            break;
-        case HOVERCRAFT_PLAYER_3:
-        case HOVERCRAFT_PLAYER_4:
-            globalStats[TEAM2_PLAYER_SCORE] += points;
-            break;
-        default:
-            globalStats[TEAM_BOT_SCORE] += points;
-        }
-    }
+    updateTeamScores(attacker, points);
 }
 
 void GameStats::removeScore(eHovercraft hit, int points)
@@ -538,46 +569,12 @@ void GameStats::removeScore(eHovercraft hit, int points)
     stats[hit][SCORE_CHANGE] = -points;
     stats[hit][SCORE_CURRENT] -= points;
 
-    // Update team scores if team game mode
-    switch (m_eGameMode)
-    {
-    case GAMEMODE_TEAMS_AI_VS_PLAYERS:
-        if (isBot(hit))
-        {
-            globalStats[TEAM_BOT_SCORE] = FuncUtils::max(globalStats[TEAM_BOT_SCORE] - points, 0);
-        }
-        else
-        {
-            globalStats[TEAM_PLAYER_SCORE] = FuncUtils::max(globalStats[TEAM_PLAYER_SCORE] - points, 0);
-        }
-        break;
-    case GAMEMODE_TEAM_AI_SOLO_PLAYERS:
-        if (isBot(hit))
-        {
-            // Only bots have a team
-            globalStats[TEAM_BOT_SCORE] = FuncUtils::max(globalStats[TEAM_BOT_SCORE] - points, 0);
-        }
-        break;
-    case GAMEMODE_TEAMS_PLAYERS:
-        switch (hit)
-        {
-        case HOVERCRAFT_PLAYER_1:
-        case HOVERCRAFT_PLAYER_2:
-            globalStats[TEAM_PLAYER_SCORE] = FuncUtils::max(globalStats[TEAM_PLAYER_SCORE] - points, 0);
-            break;
-        case HOVERCRAFT_PLAYER_3:
-        case HOVERCRAFT_PLAYER_4:
-            globalStats[TEAM2_PLAYER_SCORE] = FuncUtils::max(globalStats[TEAM2_PLAYER_SCORE] - points, 0);
-            break;
-        default:
-            globalStats[TEAM_BOT_SCORE] = FuncUtils::max(globalStats[TEAM_BOT_SCORE] - points, 0);
-        }
-    }
+    updateTeamScores(hit, -points);
 }
 
 bool GameStats::hasLargestScore(eHovercraft hovercraft)
 {
-    return get(eGlobalStat::SCORE_LARGEST) == get(hovercraft, SCORE_CURRENT);
+    return get(eGlobalStat::SCORE_LARGEST_HOVERCRAFT) == get(hovercraft, SCORE_CURRENT);
 }
 
 int GameStats::getLargestScore()
@@ -637,14 +634,14 @@ bool GameStats::isOnSameTeam(eHovercraft hovercraft1, eHovercraft hovercraft2) c
     case GAMEMODE_FREE_FOR_ALL:
         return false;
         break;
-    case GAMEMODE_TEAMS_AI_VS_PLAYERS:
+    case GAMEMODE_TEAMS_BOTS_VS_PLAYERS:
         return (isPlayer(hovercraft1) && isPlayer(hovercraft2))
             || (isBot(hovercraft1) && isBot(hovercraft2));
         break;
-    case GAMEMODE_TEAM_AI_SOLO_PLAYERS:
+    case GAMEMODE_TEAM_BOTS_VS_SOLO_PLAYERS:
         return isBot(hovercraft1) && isBot(hovercraft2);
         break;
-    case GAMEMODE_TEAMS_PLAYERS:
+    case GAMEMODE_TEAMS_PLAYERS1_VS_PLAYERS2_VS_BOTS:
         return (isBot(hovercraft1) && isBot(hovercraft2))
             || (hovercraft1 == HOVERCRAFT_PLAYER_1 && hovercraft2 == HOVERCRAFT_PLAYER_2)
             || (hovercraft1 == HOVERCRAFT_PLAYER_3 && hovercraft2 == HOVERCRAFT_PLAYER_4);
@@ -676,7 +673,7 @@ void GameStats::addKillstreak(eHovercraft attacker, eHovercraft hit)
     increaseCurrentTotalKillstreak(attacker);
     // notify if attacker reached current total killstreak milestone
     int killstreak = stats[attacker][KILLSTREAK_CURRENT];
-    if (killstreak > CURRENT_TOTAL_KILLSTREAK_MILESTONE)
+    if (killstreak % CURRENT_TOTAL_KILLSTREAK_MILESTONE == 0)
     {
         // Only display kill message if players are involved (either attacker or hit).
         // This avoids unnecessary work to do and sound effects.
@@ -1020,6 +1017,58 @@ void GameStats::awardToHovercrafts(eHovercraftStat stat,
         }
     }
 }
+
+/*
+    It does not make sense to award most player and bot kill awards depending
+    on the context. The game mode, number of bots, and players all impact
+    whether it makes sense to give these awards.
+*/
+bool GameStats::shouldAwardPlayerAndBotKillAwards()
+{
+    switch (m_eGameMode)
+    {
+    case GAMEMODE_FREE_FOR_ALL:
+        /*
+            There must be at least 2 hovercrafts of each type in order for
+            everyone to have a choice to hit a bot or a player. The smallest
+            case is:
+
+                2 players and 2 bot
+        */
+        return (m_iHovercraftCount >= 2 && m_iBotCount >= 2);
+    case GAMEMODE_TEAMS_BOTS_VS_PLAYERS:
+        /*
+            Since only players can attack bots, and bots can attack players,
+            these awards don't make sense, since this would be equivalent to
+            checking for the most kills on each team.
+        */
+        return false;
+    case GAMEMODE_TEAMS_PLAYERS1_VS_PLAYERS2_VS_BOTS:
+        /*
+            There must be a bot. Player count is forced to 4 players, so we
+            know there will always be the choice to hit other players.
+        */
+        return m_iBotCount >= 1;
+    case GAMEMODE_TEAM_BOTS_VS_SOLO_PLAYERS:
+        /*
+            There must be at least 2 players in order for players to have a
+            choice to hit a bot or a player. Since bots are on the same team,
+            and therefore can't hit each other, we don't care about giving bots
+            the choice, only that there exists at least 1 bot. The smallest
+            case is:
+
+                2 players and 1 bot
+        */
+        return (m_iPlayerCount >= 2) && (m_iBotCount >= 1);
+    default:
+        /*
+            While every mode should have there own criteria, we might as well
+            default to true.
+        */
+        return true;
+    }
+
+}
 /*
     Award all hovercrafts with the award of having the highest specified stat.
     That specified stat must have a value strictly greater than 0 to count,
@@ -1076,7 +1125,7 @@ void GameStats::awardZeroStat(eHovercraftStat stat,
 void GameStats::awardAwards()
 {
     // Multiplayer only awards
-    if ((m_iPlayerCount > 1) && (m_iBotCount > 1))
+    if (shouldAwardPlayerAndBotKillAwards())
     {
         awardHighestNonZeroStat(KILLS_TOTAL_AGAINST_BOTS,      "Ludite",        "Most bot kills",           200);
         awardHighestNonZeroStat(KILLS_TOTAL_AGAINST_PLAYERS,   "Misanthropist", "Most player kills",        200);
